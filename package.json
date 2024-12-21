@@ -2,15 +2,20 @@
   "name": "@codeperate/json-schema-builder",
   "version": "0.0.0",
   "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
   ],
   "type": "module",
   "scripts": {
-    "build": "tsc .",
+    "build": "tsc",
     "test": "tsc -p tsconfig.test.json && node --test dist/test/",
     "develop:test": "jest --watchAll",
-    "release": "npm run build && npx np --no-cleanup --no-release-draft"
+    "release": "del-cli dist && npm run build && npx np --no-cleanup --no-release-draft"
   },
   "repository": {
     "type": "git",
