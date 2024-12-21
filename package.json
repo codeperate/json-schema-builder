@@ -12,7 +12,7 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "test": "tsc -p tsconfig.test.json && node --test dist/test",
     "develop:test": "jest --watchAll",
     "release": "npm run test && del-cli dist && npm run build && npx np --yolo --no-release-draft"
