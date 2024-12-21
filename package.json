@@ -1,0 +1,41 @@
+{
+  "name": "@codeperate/json-schema-builder",
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "tsc .",
+    "test": "tsc -p tsconfig.test.json && node --test dist/test/",
+    "develop:test": "jest --watchAll",
+    "release": "npm run build && npx np --no-cleanup --no-release-draft"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codeperate/json-schema-builder.git"
+  },
+  "author": "Codeperate Limited",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/codeperate/json-schema-builder/issues"
+  },
+  "homepage": "https://github.com/codeperate/json-schema-builder#readme",
+  "peerDependencies": {
+    "json-schema-to-ts": "^3.1.1"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.34.13",
+    "@types/node": "^20.11.5",
+    "del-cli": "^6.0.0",
+    "json-schema-to-ts": "^3.1.1",
+    "typescript": "^5.7.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
