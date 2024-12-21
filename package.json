@@ -13,9 +13,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "tsc -p tsconfig.test.json && node --test dist/test/",
+    "test": "tsc -p tsconfig.test.json && node --test dist/test",
     "develop:test": "jest --watchAll",
-    "release": "del-cli dist && npm run build && npx np --no-cleanup --no-release-draft"
+    "release": "npm run test && del-cli dist && npm run build && npx np --yolo --no-release-draft"
   },
   "repository": {
     "type": "git",
