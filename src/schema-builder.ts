@@ -1,7 +1,7 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 
-export interface SchemaBuilder<T extends object = any, Schema = any> {
+export interface SchemaBuilder<T = any, Schema = any> {
   type: T;
   schema: Schema;
   pick(props: (keyof T)[] | RegExp, options?: { removeRequired?: boolean }): SchemaBuilder<T>;
