@@ -11,7 +11,7 @@ export interface SchemaBuilder<T extends object = any> {
     key: K,
     value: V | ((curVal: JSONSchema) => V),
   ): SchemaBuilder<Omit<T, K> & { [key in K]: FromSchema<V> }>;
-  setPropsRaw<K extends keyof T, V = any>(
+  setPropsType<K extends keyof T, V = any>(
     key: K,
     value: JSONSchema | ((curVal: JSONSchema) => JSONSchema),
   ): SchemaBuilder<Omit<T, K> & { [key in K]: V }>;
@@ -73,7 +73,7 @@ export const schemaBuilder = <T extends object = any>(schema: JSONSchema) => {
       schema.properties[key as string] = typeof value === 'function' ? value(schema.properties[key as string] as T[typeof key]) : value;
       return clone;
     },
-    setPropsRaw(...args) {
+    setPropsType(...args) {
       return this.setProps(...args);
     },
     clone() {
