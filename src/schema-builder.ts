@@ -1,11 +1,11 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 
-export interface SchemaBuilder<T = any, Schema = any> {
+export interface SchemaBuilder<T extends object = any, Schema = any> {
   type: T;
   schema: Schema;
-  pick(props: (keyof T)[] | RegExp, options?: { removeRequired?: boolean }): SchemaBuilder<T>;
-  omit(props: (keyof T)[] | RegExp, options?: { removeRequired?: boolean }): SchemaBuilder<T>;
+  pick<Props extends keyof T>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Pick<T, Props>>;
+  omit<Props extends keyof T>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Omit<T, Props>>;
   set<K extends keyof JSONSchema>(key: K, value: JSONSchema[K] | ((curVal: JSONSchema[K]) => JSONSchema[K])): SchemaBuilder<T>;
   setProps<K extends keyof T, V extends JSONSchema>(
     key: K,
@@ -25,6 +25,7 @@ export interface SchemaBuilder<T = any, Schema = any> {
 export const schemaBuilder = <T extends object = any, Schema extends JSONSchema = any>(schema: Schema) => {
   return {
     schema,
+    type: {} as T,
     pick(props, { removeRequired = true } = {}) {
       const clone = this.clone();
       const { schema } = clone as { schema: Writable<JSONSchema> };
@@ -33,7 +34,7 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       if (!schema.properties) return clone;
       const deleted: string[] = [];
       for (const key in schema.properties) {
-        const condition = Array.isArray(props) ? props.includes(key as keyof T) : key.match(props);
+        const condition = Array.isArray(props) ? props.includes(key as any) : key.match(props);
         if (!condition) {
           delete schema.properties[key];
           deleted.push(key);
@@ -50,7 +51,7 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       if (!schema.properties) return clone;
       const deleted: string[] = [];
       for (const key in schema.properties) {
-        const condition = Array.isArray(props) ? props.includes(key as keyof T) : key.match(props);
+        const condition = Array.isArray(props) ? props.includes(key as any) : key.match(props);
         if (condition) {
           delete schema.properties[key];
           deleted.push(key);
