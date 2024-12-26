@@ -1,9 +1,9 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 
-export interface SchemaBuilder<T extends object = any> {
+export interface SchemaBuilder<T extends object = any, Schema = any> {
   type: T;
-  schema: JSONSchema;
+  schema: Schema;
   pick(props: (keyof T)[] | RegExp, options?: { removeRequired?: boolean }): SchemaBuilder<T>;
   omit(props: (keyof T)[] | RegExp, options?: { removeRequired?: boolean }): SchemaBuilder<T>;
   set<K extends keyof JSONSchema>(key: K, value: JSONSchema[K] | ((curVal: JSONSchema[K]) => JSONSchema[K])): SchemaBuilder<T>;
@@ -22,7 +22,7 @@ export interface SchemaBuilder<T extends object = any> {
   noRef(options?: { removeRequired?: boolean }): SchemaBuilder<T>;
 }
 
-export const schemaBuilder = <T extends object = any>(schema: JSONSchema) => {
+export const schemaBuilder = <T extends object = any, Schema extends JSONSchema = any>(schema: Schema) => {
   return {
     schema,
     pick(props, { removeRequired = true } = {}) {
@@ -111,5 +111,5 @@ export const schemaBuilder = <T extends object = any>(schema: JSONSchema) => {
       if (schema.required && removeRequired) schema.required = schema.required.filter((str: string) => !deleted.includes(str));
       return clone;
     },
-  } as SchemaBuilder<T>;
+  } as SchemaBuilder<T, Schema>;
 };
