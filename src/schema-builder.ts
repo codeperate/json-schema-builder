@@ -34,7 +34,7 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       if (!schema.properties) return clone;
       const deleted: string[] = [];
       for (const key in schema.properties) {
-        const condition = Array.isArray(props) ? props.includes(key as any) : key.match(props);
+        const condition = props.includes(key as (typeof props)[0]);
         if (!condition) {
           delete schema.properties[key];
           deleted.push(key);
@@ -51,7 +51,7 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       if (!schema.properties) return clone;
       const deleted: string[] = [];
       for (const key in schema.properties) {
-        const condition = Array.isArray(props) ? props.includes(key as any) : key.match(props);
+        const condition = props.includes(key as (typeof props)[0]);
         if (condition) {
           delete schema.properties[key];
           deleted.push(key);
