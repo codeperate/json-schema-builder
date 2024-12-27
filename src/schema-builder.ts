@@ -1,32 +1,32 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 
-export interface SchemaBuilder<T extends object = any, Schema extends JSONSchema = any> {
-  type: T;
+export interface SchemaBuilder<Type extends object = any, Schema extends JSONSchema = any> {
+  type: Type;
   schema: Schema;
-  pick<Props extends keyof T>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Pick<T, Props>, Schema>;
-  omit<Props extends keyof T>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Omit<T, Props>, Schema>;
-  set<K extends keyof JSONSchema>(key: K, value: JSONSchema[K] | ((curVal: JSONSchema[K]) => JSONSchema[K])): SchemaBuilder<T, Schema>;
-  setProps<K extends keyof T, V extends JSONSchema>(
+  pick<Props extends keyof Type>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Pick<Type, Props>, Schema>;
+  omit<Props extends keyof Type>(props: Props[], options?: { removeRequired?: boolean }): SchemaBuilder<Omit<Type, Props>, Schema>;
+  set<K extends keyof JSONSchema>(key: K, value: JSONSchema[K] | ((curVal: JSONSchema[K]) => JSONSchema[K])): SchemaBuilder<Type, Schema>;
+  setProps<K extends keyof Type, V extends JSONSchema>(
     key: K,
     value: V | ((curVal: JSONSchema) => V),
-  ): SchemaBuilder<Omit<T, K> & { [key in K]: FromSchema<V> }, Schema>;
-  setPropsType<K extends keyof T, V = any>(
+  ): SchemaBuilder<Omit<Type, K> & { [key in K]: FromSchema<V> }, Schema>;
+  setPropsType<K extends keyof Type, V = any>(
     key: K,
     value: JSONSchema | ((curVal: JSONSchema) => JSONSchema),
-  ): SchemaBuilder<Omit<T, K> & { [key in K]: V }, Schema>;
-  optional(props: (keyof T)[]): SchemaBuilder<T, Schema>;
-  required(props: (keyof T)[]): SchemaBuilder<T, Schema>;
-  clone(): SchemaBuilder<T, Schema>;
-  toArray(): SchemaBuilder<Array<T>, { type: 'array'; items: Schema }>;
-  noRef(options?: { removeRequired?: boolean }): SchemaBuilder<T, Schema>;
+  ): SchemaBuilder<Omit<Type, K> & { [key in K]: V }, Schema>;
+  optional(props: (keyof Type)[]): SchemaBuilder<Type, Schema>;
+  required(props: (keyof Type)[]): SchemaBuilder<Type, Schema>;
+  clone(): SchemaBuilder<Type, Schema>;
+  toArray(): SchemaBuilder<Array<Type>, { type: 'array'; items: Schema }>;
+  noRef(options?: { removeRequired?: boolean }): SchemaBuilder<Type, Schema>;
   withType<V extends object>(type?: V): SchemaBuilder<V, Schema>;
 }
 
-export const schemaBuilder = <T extends object = any, Schema extends JSONSchema = any>(schema: Schema) => {
+export const schemaBuilder = <Type extends object = any, Schema extends JSONSchema = any>(schema: Schema, type?: Type) => {
   return {
     schema,
-    type: {} as T,
+    type,
     pick(props, { removeRequired = true } = {}) {
       const clone = this.clone();
       const { schema } = clone as { schema: Writable<JSONSchema> };
@@ -67,12 +67,12 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       clone.schema[key] = typeof value === 'function' ? value(clone.schema[key]) : value;
       return clone;
     },
-    setProps(key, value: Writable<JSONSchema> | ((curVal: T[typeof key]) => Writable<JSONSchema>)) {
+    setProps(key, value: Writable<JSONSchema> | ((curVal: Type[typeof key]) => Writable<JSONSchema>)) {
       const clone = this.clone();
       const { schema } = clone as { schema: Writable<JSONSchema> };
       if (typeof schema == 'boolean') return clone;
       if (!schema?.properties) return clone;
-      schema.properties[key as string] = typeof value === 'function' ? value(schema.properties[key as string] as T[typeof key]) : value;
+      schema.properties[key as string] = typeof value === 'function' ? value(schema.properties[key as string] as Type[typeof key]) : value;
       return clone;
     },
     setPropsType(...args) {
@@ -89,7 +89,7 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
       const { schema } = clone as { schema: Writable<JSONSchema> };
       if (typeof schema == 'boolean') return clone;
       if (!schema.required) schema.required = [];
-      schema.required = schema.required.filter((required) => !props.includes(required as keyof T));
+      schema.required = schema.required.filter((required) => !props.includes(required as keyof Type));
       return clone;
     },
     required(props) {
@@ -116,5 +116,5 @@ export const schemaBuilder = <T extends object = any, Schema extends JSONSchema 
     withType() {
       return this;
     },
-  } as SchemaBuilder<T, Schema>;
+  } as SchemaBuilder<Type, Schema>;
 };
