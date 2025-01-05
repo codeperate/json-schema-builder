@@ -21,8 +21,8 @@ export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaPro
     key: (string & {}) | K,
     value: JSONSchema | ((curVal: JSONSchema) => JSONSchema),
   ): SchemaBuilder<Schema, Omit<Type, K> & { [key in K]: V }>;
-  optional(props: (keyof Type)[]): SchemaBuilder<Schema, Type>;
-  required(props: (keyof Type)[]): SchemaBuilder<Schema, Type>;
+  optional(props: ((string & {}) | keyof Type)[]): SchemaBuilder<Schema, Type>;
+  required(props: ((string & {}) | keyof Type)[]): SchemaBuilder<Schema, Type>;
   clone(): SchemaBuilder<Schema, Type>;
   toArray(): SchemaBuilder<{ type: 'array'; items: Schema }, Array<Type>>;
   noRef(options?: { removeRequired?: boolean }): SchemaBuilder<Schema, Type>;
