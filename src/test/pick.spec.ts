@@ -39,4 +39,11 @@ describe('schemaBuilder pick', () => {
     const pickedSchema = schemaBuilder(schema).pick([]).schema;
     assert.deepStrictEqual(pickedSchema, { type: 'object', properties: {}, required: [] });
   });
+
+  it('withType', () => {
+    const pickedSchema = schemaBuilder(schema)
+      .withType({} as { user?: string })
+      .pick(['user']).schema;
+    assert.deepStrictEqual(pickedSchema, { type: 'object', properties: {}, required: [] });
+  });
 });
