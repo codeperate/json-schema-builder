@@ -59,4 +59,4 @@ describe('schemaBuilder setProps', () => {
   });
 });
 
-schemaBuilder<{ email: string }>(schema).setProps('email', { type: 'number' });
+schemaBuilder(schema).setProps('email', { type: 'number' });
