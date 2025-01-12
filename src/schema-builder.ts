@@ -1,9 +1,12 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 type SchemaProperties<T> = T extends { properties: infer U } ? U : never;
+
 export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaProperties<Schema>> {
   type?: Type;
   schema: Schema;
+  typedSchema: Type;
+
   pick<Props extends keyof Type>(
     props: ((string & {}) | Props)[],
     options?: { removeRequired?: boolean },
@@ -120,6 +123,9 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
     },
     withType() {
       return this;
+    },
+    get typedSchema() {
+      return this.schema as unknown as Type;
     },
   } as SchemaBuilder<Schema, Type>;
 };
