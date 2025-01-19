@@ -34,13 +34,11 @@ export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaPro
 
 export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProperties<Schema>>(schema: Schema) => {
   return {
-    schema,
+    schema: JSON.parse(JSON.stringify(schema)),
     pick(props, { removeRequired = true } = {}) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
-      if (typeof schema == 'boolean') return clone;
-
-      if (!schema.properties) return clone;
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      if (!schema.properties) return this;
       const deleted: string[] = [];
       for (const key in schema.properties) {
         const condition = props.includes(key as (typeof props)[0]);
@@ -51,13 +49,12 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
         }
       }
       if (schema.required && removeRequired) schema.required = schema.required.filter((require) => !deleted.includes(require));
-      return clone;
+      return this;
     },
     omit(props, { removeRequired = true } = {}) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
-      if (typeof schema == 'boolean') return clone;
-      if (!schema.properties) return clone;
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      if (!schema.properties) return this;
       const deleted: string[] = [];
       for (const key in schema.properties) {
         const condition = props.includes(key as (typeof props)[0]);
@@ -68,20 +65,18 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
         }
       }
       if (schema.required && removeRequired) schema.required = schema.required.filter((require) => !deleted.includes(require));
-      return clone;
+      return this;
     },
     set(key, value) {
-      const clone = this.clone();
-      clone.schema[key] = typeof value === 'function' ? value(clone.schema[key]) : value;
-      return clone;
+      this.schema[key] = typeof value === 'function' ? value(this.schema[key]) : value;
+      return this;
     },
     setProps(key, value: Writable<JSONSchema> | ((curVal) => Writable<JSONSchema>)) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
-      if (typeof schema == 'boolean') return clone;
-      if (!schema?.properties) return clone;
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      if (!schema?.properties) return this;
       schema.properties[key as string] = typeof value === 'function' ? value(schema.properties[key as string]) : value;
-      return clone;
+      return this;
     },
     setPropsType(...args) {
       return this.setProps(...args);
@@ -93,33 +88,30 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
       return schemaBuilder({ type: 'array', items: this.schema });
     },
     optional(props) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
-      if (typeof schema == 'boolean') return clone;
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
       if (!schema.required) schema.required = [];
       schema.required = schema.required.filter((required) => !props.includes(required as keyof Type));
-      return clone;
+      return this;
     },
     required(props) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
-      if (typeof schema == 'boolean') return clone;
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
       if (!schema.required) schema.required = [];
       schema.required = Array.from(new Set([...schema.required, ...props])) as string[];
-      return clone;
+      return this;
     },
     noRef({ removeRequired = true } = {}) {
-      const clone = this.clone();
-      const { schema } = clone as { schema: Writable<JSONSchema> };
+      const { schema } = this as { schema: Writable<JSONSchema> };
       const deleted: string[] = [];
-      if (typeof schema === 'boolean' || !schema.properties) return clone;
+      if (typeof schema === 'boolean' || !schema.properties) return this;
       schema.properties = Object.keys(schema.properties).reduce((reducer, key) => {
         if (JSON.stringify(schema.properties![key]).indexOf('$ref') == -1) return { ...reducer, [key]: schema.properties![key] };
         deleted.push(key);
         return reducer;
       }, {});
       if (schema.required && removeRequired) schema.required = schema.required.filter((str: string) => !deleted.includes(str));
-      return clone;
+      return this;
     },
     withType() {
       return this;
