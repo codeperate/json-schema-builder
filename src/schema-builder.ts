@@ -1,7 +1,9 @@
 import { FromSchema, JSONSchema as JSONSchema } from 'json-schema-to-ts';
 type Writable<T> = { -readonly [P in keyof T]: Writable<T[P]> };
 type SchemaProperties<T> = T extends { properties: infer U } ? U : never;
-
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+type RequiredByKey<T, K extends keyof T> = Omit<T, K> & { [key in K]: T[key] };
+type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
 export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaProperties<Schema>> {
   type?: Type;
   schema: Schema;
@@ -24,8 +26,10 @@ export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaPro
     key: (string & {}) | K,
     value: JSONSchema | ((curVal: JSONSchema) => JSONSchema),
   ): SchemaBuilder<Schema, Omit<Type, K> & { [key in K]: V }>;
-  optional(props: ((string & {}) | keyof Type)[]): SchemaBuilder<Schema, Type>;
-  required(props: ((string & {}) | keyof Type)[]): SchemaBuilder<Schema, Type>;
+  optional<Key extends keyof Type>(props: (Key | (string & {}))[]): SchemaBuilder<Schema, Optional<Type, Key>>;
+  required<Key extends keyof Type>(props: (Key | (string & {}))[]): SchemaBuilder<Schema, RequiredByKey<Type, Key>>;
+  allOptional<Deep extends boolean = false>(deep?: Deep): SchemaBuilder<Schema, Deep extends true ? DeepPartial<Type> : Partial<Type>>;
+  allRequired(): SchemaBuilder<Schema, Required<Type>>;
   clone(): SchemaBuilder<Schema, Type>;
   toArray(): SchemaBuilder<{ type: 'array'; items: Schema }, Array<Type>>;
   noRef(options?: { removeRequired?: boolean }): SchemaBuilder<Schema, Type>;
@@ -91,7 +95,31 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
       const { schema } = this as { schema: Writable<JSONSchema> };
       if (typeof schema == 'boolean') return this;
       if (!schema.required) schema.required = [];
-      schema.required = schema.required.filter((required) => !props.includes(required as keyof Type));
+      schema.required = schema.required.filter((required) => !props.includes(required as any));
+      return this;
+    },
+    allOptional(deep) {
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      if (schema.required) delete schema.required;
+      if (deep) {
+        const deepOptional = (obj: Record<any, any>) => {
+          for (const [key, value] of Object.entries(obj)) {
+            if (key == 'required' && Array.isArray(value)) delete obj[key];
+            if (typeof value == 'object' && value && value.constructor.name === 'Object') {
+              obj[key] = deepOptional(value);
+            }
+          }
+          return obj;
+        };
+        deepOptional(schema);
+      }
+      return this;
+    },
+    allRequired() {
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      schema.required = Object.keys(schema.properties ?? {});
       return this;
     },
     required(props) {
