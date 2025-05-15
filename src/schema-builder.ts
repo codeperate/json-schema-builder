@@ -26,6 +26,11 @@ export interface SchemaBuilder<Schema extends JSONSchema = any, Type = SchemaPro
     key: (string & {}) | K,
     value: JSONSchema | ((curVal: JSONSchema) => JSONSchema),
   ): SchemaBuilder<Schema, Omit<Type, K> & { [key in K]: V }>;
+  addProps<K extends string, V extends JSONSchema>(
+    key: K,
+    value: V | ((curVal: JSONSchema) => V),
+    options?: { required?: boolean }
+  ): SchemaBuilder<Schema, Type & { [key in K]: FromSchema<V> }>;
   optional<Key extends keyof Type>(props: (Key | (string & {}))[]): SchemaBuilder<Schema, Optional<Type, Key>>;
   required<Key extends keyof Type>(props: (Key | (string & {}))[]): SchemaBuilder<Schema, RequiredByKey<Type, Key>>;
   allOptional<Deep extends boolean = false>(deep?: Deep): SchemaBuilder<Schema, Deep extends true ? DeepPartial<Type> : Partial<Type>>;
@@ -146,6 +151,19 @@ export const schemaBuilder = <Schema extends JSONSchema = any, Type = SchemaProp
     },
     get typedSchema() {
       return this.schema as unknown as Type;
+    },
+    addProps(key, value, { required = false } = {}) {
+      const { schema } = this as { schema: Writable<JSONSchema> };
+      if (typeof schema == 'boolean') return this;
+      if (!schema.properties) schema.properties = {};
+
+      schema.properties[key] = typeof value === 'function' ? value(schema.properties[key]) : JSON.parse(JSON.stringify(value));
+      if (required) {
+        if (!schema.required) schema.required = [];
+        schema.required.push(key);
+      }
+
+      return this;
     },
   } as SchemaBuilder<Schema, Type>;
 };
